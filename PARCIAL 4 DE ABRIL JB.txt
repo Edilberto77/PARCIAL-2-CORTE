@@ -1,0 +1,173 @@
+#include <iostream>
+#include <queue>
+#include <stack>
+
+using namespace std;
+
+// Definición de estructura para nodo de ABB
+struct NodoABB {
+    int valor;
+    int prioridad;
+    NodoABB* izquierdo;
+    NodoABB* derecho;
+
+    NodoABB(int v, int p) : valor(v), prioridad(p), izquierdo(nullptr), derecho(nullptr) {}
+};
+
+// Definición de estructura para nodo de cola de prioridad
+struct Nodo {
+    int valor;
+    int prioridad;
+
+    Nodo(int v, int p) : valor(v), prioridad(p) {}
+};
+
+// Operador de comparación para la cola de prioridad
+bool operator<(const Nodo& a, const Nodo& b) {
+    return a.prioridad > b.prioridad;
+}
+
+// Función para agregar un nodo a la cola de prioridad
+void agregarANQ(priority_queue<Nodo>& pq, int valor, int prioridad) {
+    pq.push(Nodo(valor, prioridad));
+    cout << "Nodo agregado a la cola de prioridad: " << valor << " con prioridad " << prioridad << endl;
+}
+
+// Función para agregar un nodo al ABB
+void agregarABB(NodoABB*& raiz, int valor, int prioridad) {
+    if (raiz == nullptr) {
+        raiz = new NodoABB(valor, prioridad);
+    } else {
+        if (prioridad < raiz->prioridad) {
+            agregarABB(raiz->izquierdo, valor, prioridad);
+        } else {
+            agregarABB(raiz->derecho, valor, prioridad);
+        }
+    }
+    cout << "Nodo agregado al árbol con prioridad: " << valor << " con prioridad " << prioridad << endl;
+}
+
+// Función para eliminar un nodo de la cola de prioridad
+void eliminarDeNQ(priority_queue<Nodo>& pq) {
+    if (pq.empty()) {
+        cout << "Error: La cola de prioridad está vacía." << endl;
+        return;
+    }
+    cout << "Nodo eliminado de la cola de prioridad: " << pq.top().valor << " con prioridad " << pq.top().prioridad << endl;
+    pq.pop();
+}
+
+// Función para eliminar un nodo del ABB
+NodoABB* encontrarMinimo(NodoABB* raiz) {
+    NodoABB* actual = raiz;
+    while (actual->izquierdo != nullptr) {
+        actual = actual->izquierdo;
+    }
+    return actual;
+}
+
+// Función auxiliar para eliminar un nodo del ABB
+NodoABB* eliminarNodo(NodoABB* raiz, int prioridad) {
+    if (raiz == nullptr) {
+        return raiz;
+    }
+
+    if (prioridad < raiz->prioridad) {
+        raiz->izquierdo = eliminarNodo(raiz->izquierdo, prioridad);
+    } else if (prioridad > raiz->prioridad) {
+        raiz->derecho = eliminarNodo(raiz->derecho, prioridad);
+    } else {
+        if (raiz->izquierdo == nullptr) {
+            NodoABB* temp = raiz->derecho;
+            delete raiz;
+            return temp;
+        } else if (raiz->derecho == nullptr) {
+            NodoABB* temp = raiz->izquierdo;
+            delete raiz;
+            return temp;
+        }
+
+        NodoABB* temp = encontrarMinimo(raiz->derecho);
+        raiz->valor = temp->valor;
+        raiz->prioridad = temp->prioridad;
+        raiz->derecho = eliminarNodo(raiz->derecho, temp->prioridad);
+    }
+
+    return raiz;
+}
+
+// Función para mostrar el ABB
+void mostrarABB(NodoABB* raiz) {
+    if (raiz != nullptr) {
+        mostrarABB(raiz->izquierdo);
+        cout << "(" << raiz->valor << ", " << raiz->prioridad << ") ";
+        mostrarABB(raiz->derecho);
+    }
+}
+
+int main() {
+    priority_queue<Nodo> colaDePrioridad;
+    NodoABB* raizABB = nullptr;
+
+    int opcion, valor, prioridad;
+
+    while (true) {
+        cout << "--- MENU ---\n";
+        cout << "1. Agregar nodo a la cola de prioridad\n";
+        cout << "2. Agregar nodo al árbol con prioridad\n";
+        cout << "3. Eliminar nodo de la cola de prioridad\n";
+        cout << "4. Eliminar nodo del árbol con prioridad\n";
+        cout << "5. Mostrar cola de prioridad\n";
+        cout << "6. Mostrar árbol con prioridad\n";
+        cout << "7. Salir\n";
+        cout << "--- ---- ---\n";
+        cout << "Selecciona una opción: ";
+        cin >> opcion;
+
+        switch (opcion) {
+            case 1:
+                cout << "Ingresa el valor: ";
+                cin >> valor;
+                cout << "Ingresa la prioridad: ";
+                cin >> prioridad;
+                agregarANQ(colaDePrioridad, valor, prioridad);
+                break;
+            case 2:
+                cout << "Ingresa el valor: ";
+                cin >> valor;
+                cout << "Ingresa la prioridad: ";
+                cin >> prioridad;
+                agregarABB(raizABB, valor, prioridad);
+                break;
+            case 3:
+                eliminarDeNQ(colaDePrioridad);
+                break;
+            case 4:
+                cout << "Ingresa la prioridad del nodo a eliminar del árbol: ";
+                cin >> prioridad;
+                raizABB = eliminarNodo(raizABB, prioridad);
+                break;
+            case 5:
+                cout << "Cola de prioridad: ";
+                // Mostrar cola de prioridad
+                while (!colaDePrioridad.empty()) {
+                    cout << "(" << colaDePrioridad.top().valor << ", " << colaDePrioridad.top().prioridad << ") ";
+                    colaDePrioridad.pop();
+                }
+                cout << endl;
+                break;
+            case 6:
+                cout << "Árbol con prioridad: ";
+                mostrarABB(raizABB);
+                cout << endl;
+                break;
+            case 7:
+                cout << "¡Hasta luego!\n";
+                return 0;
+            default:
+                cout << "Opción inválida\n";
+        }
+    }
+
+    return 0;
+}
